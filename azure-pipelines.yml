@@ -357,13 +357,98 @@ stages:
             msbuildArguments: '/t:restore'
 
         - task: MSBuild@1
-          displayName: 'Framework UI - Build and Pack'
+          displayName: 'Framework UI - Build AnyCpu'
           inputs:
             solution: 'src\ISynergy.Framework.UI\ISynergy.Framework.UI.csproj'
             platform: AnyCpu
             configuration: '$(BuildConfiguration)'
-            msbuildArguments: '/p:PackageOutputPath=$(Build.ArtifactStagingDirectory)'
         
+        - task: MSBuild@1
+          displayName: 'Framework UI - Nuget Restore x86'
+          inputs:
+            solution: 'src\ISynergy.Framework.UI\ISynergy.Framework.UI.Windows.csproj'
+            platform: x86
+            configuration: '$(BuildConfiguration)'
+            msbuildArguments: '/t:restore'
+      
+        - task: MSBuild@1
+          displayName: 'Framework UI - Build x86'
+          inputs:
+            solution: 'src\ISynergy.Framework.UI\ISynergy.Framework.UI.Windows.csproj'
+            platform: x86
+            configuration: '$(BuildConfiguration)'
+            msbuildArguments: '/p:VersionAssembly=$(build.buildNumber)'
+      
+        - task: MSBuild@1
+          displayName: 'Framework UI - Nuget Restore x64'
+          inputs:
+            solution: 'src\ISynergy.Framework.UI\ISynergy.Framework.UI.Windows.csproj'
+            platform: x64
+            configuration: '$(BuildConfiguration)'
+            msbuildArguments: '/t:restore'
+      
+        - task: MSBuild@1
+          displayName: 'Framework UI - Build x64'
+          inputs:
+            solution: 'src\ISynergy.Framework.UI\ISynergy.Framework.UI.Windows.csproj'
+            platform: x64
+            configuration: '$(BuildConfiguration)'
+            msbuildArguments: '/p:VersionAssembly=$(build.buildNumber)'
+      
+        - task: MSBuild@1
+          displayName: 'Framework UI - Nuget Restore ARM'
+          inputs:
+            solution: 'src\ISynergy.Framework.UI\ISynergy.Framework.UI.Windows.csproj'
+            platform: ARM
+            configuration: '$(BuildConfiguration)'
+            msbuildArguments: '/t:restore'
+      
+        - task: MSBuild@1
+          displayName: 'Framework UI - Build ARM'
+          inputs:
+            solution: 'src\ISynergy.Framework.UI\ISynergy.Framework.UI.Windows.csproj'
+            platform: ARM
+            configuration: '$(BuildConfiguration)'
+            msbuildArguments: '/p:VersionAssembly=$(build.buildNumber)'
+      
+        - task: MSBuild@1
+          displayName: 'Framework UI - Nuget Restore ARM64'
+          inputs:
+            solution: 'src\ISynergy.Framework.UI\ISynergy.Framework.UI.Windows.csproj'
+            platform: ARM64
+            configuration: '$(BuildConfiguration)'
+            msbuildArguments: '/t:restore'
+      
+        - task: MSBuild@1
+          displayName: 'Framework UI - Build ARM64'
+          inputs:
+            solution: 'src\ISynergy.Framework.UI\ISynergy.Framework.UI.Windows.csproj'
+            platform: ARM64
+            configuration: '$(BuildConfiguration)'
+            msbuildArguments: '/p:VersionAssembly=$(build.buildNumber)'
+
+        - task: CopyFiles@2
+          displayName: 'Copy Multi Platform File to Reference folder'
+          inputs:
+            SourceFolder: 'src\ISynergy.Framework.UI\bin\$(BuildConfiguration)\uap10\x86'
+            Contents: |
+              ISynergy.Framework.UI.dll
+              ISynergy.Framework.UI.pri
+            TargetFolder: 'src\ISynergy.Framework.UI\bin\$(BuildConfiguration)\uap10'
+           
+        - task: PowerShell@2
+          displayName: 'Create Multi Platform Reference file'
+          inputs:
+            targetType: filePath
+            filePath: ./build/createplatformdll.ps1
+            arguments: '-file "src\ISynergy.Framework.UI\bin\$(BuildConfiguration)\uap10\ISynergy.Framework.UI.dll"'
+
+        - task: NuGetCommand@2
+          displayName: 'NuGet pack - Framework UI'
+          inputs:
+            command: custom
+            arguments: 'pack nuget/I-Synergy.Framework.UI.nuspec -OutputDirectory $(Build.ArtifactStagingDirectory) -Properties Version=$(VersionPackage);Branch=$(build.sourceBranch);CommitId=$(build.sourceVersion);BuildConfiguration=$(BuildConfiguration) -Symbols -SymbolPackageFormat snupkg'
+
         - task: NuGetCommand@2
           displayName: 'Sign Nuget packages'
           inputs:
